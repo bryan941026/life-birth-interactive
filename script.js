@@ -1,3 +1,38 @@
+const LOGIN_URL = "http://127.0.0.1:8000/?loginRequired=1";
+const ENTRY_STORAGE_KEY = "lifeBirthEntry";
+
+function requireLoginEntry() {
+  const params = new URLSearchParams(window.location.search);
+  const fromLogin = params.get("fromLogin") === "1";
+  const student = params.get("student") || "";
+  const entryToken = params.get("entryToken") || "";
+  const savedEntry = sessionStorage.getItem(ENTRY_STORAGE_KEY);
+
+  if (fromLogin && /^[^\s@]+@gmail\.com$/i.test(student) && entryToken.length >= 32) {
+    sessionStorage.setItem(ENTRY_STORAGE_KEY, JSON.stringify({
+      student,
+      entryToken,
+      enteredAt: Date.now()
+    }));
+    window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+    return;
+  }
+
+  if (savedEntry) {
+    try {
+      const entry = JSON.parse(savedEntry);
+      const stillFresh = Date.now() - Number(entry.enteredAt || 0) < 6 * 60 * 60 * 1000;
+      if (entry.student && entry.entryToken && stillFresh) return;
+    } catch {
+      sessionStorage.removeItem(ENTRY_STORAGE_KEY);
+    }
+  }
+
+  window.location.replace(LOGIN_URL);
+}
+
+requireLoginEntry();
+
 const state = {
   matchScore: 0,
   cycleScore: 0,
