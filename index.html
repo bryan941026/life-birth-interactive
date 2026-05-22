@@ -3,235 +3,78 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>生命的誕生 | 新生命的誕生互動學習</title>
+  <meta name="theme-color" content="#11172d">
+  <title>燈｜對話</title>
+  <link rel="preconnect" href="https://images.unsplash.com">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header class="site-header">
-    <a class="brand" href="#top" aria-label="回到首頁">
-      <span class="brand-mark">生</span>
-      <span>
-        <strong>生命的誕生</strong>
-        <small>新生命的誕生互動學習</small>
-      </span>
-    </a>
-    <nav aria-label="主要導覽">
-      <a href="#concepts">概念</a>
-      <a href="#mission">任務</a>
-      <a href="#assessment">評量</a>
-      <a href="#report">報告</a>
-    </nav>
-  </header>
-
-  <main id="top">
-    <section class="hero">
-      <div class="hero-copy">
-        <p class="eyebrow">自然科學第一章</p>
-        <h1>用互動任務看懂新生命如何誕生</h1>
-        <p>
-          從生殖的意義、花的構造、授粉與受精，到果實種子和幼苗成長，
-          你會在操作、推理和評量中建立完整的生命延續概念。
-        </p>
-        <div class="hero-actions">
-          <a class="button primary" href="#mission">開始挑戰</a>
-          <a class="button secondary" href="#assessment">直接評量</a>
-        </div>
-      </div>
-
-      <div class="growth-stage" aria-label="花、果實與幼苗示意圖">
-        <div class="sky"></div>
-        <div class="sun" aria-hidden="true"></div>
-        <div class="ground"></div>
-        <div class="plant plant-left"><span></span></div>
-        <div class="plant plant-right"><span></span></div>
-        <div class="flower" aria-hidden="true">
-          <i></i><i></i><i></i><i></i><b></b>
-        </div>
-        <div class="fruit fruit-a">果</div>
-        <div class="seed seed-a"></div>
-        <div class="seed seed-b"></div>
-      </div>
-    </section>
-
-    <section id="concepts" class="section">
-      <div class="section-head">
-        <p class="eyebrow">概念地圖</p>
-        <h2>先抓住五個關鍵想法</h2>
-      </div>
-      <div class="concept-grid">
-        <article>
-          <span>01</span>
-          <h3>生殖讓生命延續</h3>
-          <p>生物能產生新的個體，使族群不會因原本個體死亡而消失。生殖可分為有性生殖與無性生殖。</p>
-        </article>
-        <article>
-          <span>02</span>
-          <h3>花是開花植物的生殖器官</h3>
-          <p>雄蕊產生花粉，雌蕊含有胚珠。花粉必須到達柱頭，後續才可能形成種子。</p>
-        </article>
-        <article>
-          <span>03</span>
-          <h3>授粉不同於受精</h3>
-          <p>授粉是花粉傳到柱頭；受精是精細胞與卵細胞結合。受精後胚珠可發育成種子。</p>
-        </article>
-        <article>
-          <span>04</span>
-          <h3>果實保護並幫助散播種子</h3>
-          <p>子房常發育成果實，果實可保護種子，也能藉風、水、動物或彈力等方式協助散播。</p>
-        </article>
-        <article>
-          <span>05</span>
-          <h3>萌芽需要合適條件</h3>
-          <p>種子通常需要水分、空氣與適當溫度。光照對不同種子的影響不同，不能一概而論。</p>
-        </article>
-      </div>
-    </section>
-
-    <section id="mission" class="section mission">
-      <div class="section-head">
-        <p class="eyebrow">互動任務</p>
-        <h2>完成任務，累積學習分數</h2>
-      </div>
-
-      <div class="tabs" role="tablist" aria-label="互動任務選單">
-        <button class="tab active" type="button" role="tab" aria-selected="true" data-panel="anatomy">花的構造</button>
-        <button class="tab" type="button" role="tab" aria-selected="false" data-panel="cycle">生命流程</button>
-        <button class="tab" type="button" role="tab" aria-selected="false" data-panel="simulator">萌芽模擬</button>
-      </div>
-
-      <section class="panel active" id="anatomy" aria-labelledby="anatomy-title">
-        <div class="panel-text">
-          <h3 id="anatomy-title">任務一：把構造放到正確功能</h3>
-          <p>點選左側名詞，再點選右側功能卡片。全部配對後按下檢查。</p>
-        </div>
-        <div class="match-layout">
-          <div class="term-bank" aria-label="名詞選擇區">
-            <button type="button" data-term="pollen">花粉</button>
-            <button type="button" data-term="stamen">雄蕊</button>
-            <button type="button" data-term="pistil">雌蕊</button>
-            <button type="button" data-term="ovule">胚珠</button>
+  <main class="app-shell">
+    <section class="chat-panel" aria-label="與燈對話">
+      <header class="chat-header">
+        <div class="identity">
+          <div class="avatar" aria-hidden="true">
+            <span>燈</span>
           </div>
-          <div class="target-grid" aria-label="功能配對區">
-            <button class="target-card" type="button" data-answer="stamen">
-              <strong>產生花粉的構造</strong><span>尚未作答</span>
-            </button>
-            <button class="target-card" type="button" data-answer="pistil">
-              <strong>接受花粉，內部可能含有胚珠</strong><span>尚未作答</span>
-            </button>
-            <button class="target-card" type="button" data-answer="pollen">
-              <strong>可把雄性生殖細胞送往雌蕊</strong><span>尚未作答</span>
-            </button>
-            <button class="target-card" type="button" data-answer="ovule">
-              <strong>受精後可發育成種子</strong><span>尚未作答</span>
-            </button>
+          <div>
+            <p class="kicker">溫柔陪伴與知識對話</p>
+            <h1>燈</h1>
           </div>
         </div>
-        <div class="button-row">
-          <button class="button primary" id="check-match" type="button">檢查配對</button>
-          <button class="button quiet" id="reset-match" type="button">重新作答</button>
+        <div class="status-pill" aria-label="目前狀態">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span>可以對話</span>
         </div>
-        <p class="feedback" id="match-feedback" aria-live="polite"></p>
+      </header>
+
+      <section class="presence" aria-label="燈的簡介">
+        <div class="presence-copy">
+          <p class="overline">主唱 · 學科知識 · 安靜陪伴</p>
+          <p>
+            我是燈。你可以把想說的事情慢慢放下來，我會安靜聽你說，也會用清楚的方式陪你整理問題。
+          </p>
+        </div>
+        <div class="keepsakes" aria-label="燈喜歡的事物">
+          <span>企鵝</span>
+          <span>石頭收藏</span>
+          <span>星夜</span>
+        </div>
       </section>
 
-      <section class="panel" id="cycle" aria-labelledby="cycle-title">
-        <div class="panel-text">
-          <h3 id="cycle-title">任務二：排出新生命的形成順序</h3>
-          <p>依序點選流程卡片，組成從開花到幼苗的正確歷程。</p>
-        </div>
-        <div class="sequence-bank" aria-label="可選流程">
-          <button type="button" data-step="4">種子散播到新地點</button>
-          <button type="button" data-step="1">開花並形成雄蕊、雌蕊</button>
-          <button type="button" data-step="5">條件合適時萌芽成幼苗</button>
-          <button type="button" data-step="2">花粉傳到柱頭完成授粉</button>
-          <button type="button" data-step="3">受精後形成種子與果實</button>
-        </div>
-        <div class="sequence-line" id="sequence-line" aria-label="你的排序"></div>
-        <div class="button-row">
-          <button class="button primary" id="check-cycle" type="button">檢查順序</button>
-          <button class="button quiet" id="reset-cycle" type="button">重排</button>
-        </div>
-        <p class="feedback" id="cycle-feedback" aria-live="polite"></p>
-      </section>
+      <section id="messages" class="messages" aria-live="polite" aria-label="對話內容"></section>
 
-      <section class="panel" id="simulator" aria-labelledby="sim-title">
-        <div class="panel-text">
-          <h3 id="sim-title">任務三：調整萌芽條件</h3>
-          <p>觀察水分、空氣和溫度如何影響種子萌芽。嘗試找出最適合的組合。</p>
+      <form id="chat-form" class="composer" autocomplete="off">
+        <label class="sr-only" for="message-input">輸入訊息</label>
+        <textarea id="message-input" name="message" rows="1" placeholder="和燈說說話..." maxlength="4000"></textarea>
+        <div class="composer-actions">
+          <button id="voice-button" class="icon-button" type="button" aria-label="語音輸入" title="語音輸入">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Z"></path>
+              <path d="M19 11a7 7 0 0 1-14 0"></path>
+              <path d="M12 18v3"></path>
+              <path d="M8 21h8"></path>
+            </svg>
+          </button>
+          <button id="send-button" class="send-button" type="submit">
+            <span>送出</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m22 2-7 20-4-9-9-4Z"></path>
+              <path d="M22 2 11 13"></path>
+            </svg>
+          </button>
         </div>
-        <div class="sim-grid">
-          <div class="controls">
-            <label>水分 <input id="water" type="range" min="0" max="100" value="55"></label>
-            <label>空氣 <input id="air" type="range" min="0" max="100" value="70"></label>
-            <label>溫度 <input id="temperature" type="range" min="0" max="100" value="62"></label>
-          </div>
-          <div class="seed-visual" aria-label="種子萌芽動畫">
-            <div class="sprout" id="sprout"><span></span></div>
-            <div class="sim-ground"></div>
-          </div>
-          <div class="meter-card">
-            <strong>萌芽成功率</strong>
-            <div class="meter"><span id="meter-fill"></span></div>
-            <p id="sim-result">正在計算...</p>
-          </div>
-        </div>
-      </section>
-    </section>
-
-    <section id="assessment" class="section assessment">
-      <div class="section-head">
-        <p class="eyebrow">形成性評量</p>
-        <h2>用五題檢查自己是否真正理解</h2>
-      </div>
-      <form id="quiz">
-        <fieldset>
-          <legend>1. 下列哪一項最能說明生殖的功能？</legend>
-          <label><input type="radio" name="q1" value="0"> 讓個體長得更大</label>
-          <label><input type="radio" name="q1" value="1"> 產生新個體，使生命延續</label>
-          <label><input type="radio" name="q1" value="0"> 只負責獲得養分</label>
-        </fieldset>
-        <fieldset>
-          <legend>2. 授粉是指什麼？</legend>
-          <label><input type="radio" name="q2" value="1"> 花粉傳到雌蕊柱頭</label>
-          <label><input type="radio" name="q2" value="0"> 種子開始長出根</label>
-          <label><input type="radio" name="q2" value="0"> 果實被動物吃掉</label>
-        </fieldset>
-        <fieldset>
-          <legend>3. 胚珠受精後通常會發育成什麼？</legend>
-          <label><input type="radio" name="q3" value="0"> 花瓣</label>
-          <label><input type="radio" name="q3" value="1"> 種子</label>
-          <label><input type="radio" name="q3" value="0"> 葉片</label>
-        </fieldset>
-        <fieldset>
-          <legend>4. 下列哪一組較適合多數種子萌芽？</legend>
-          <label><input type="radio" name="q4" value="1"> 有水分、有空氣、溫度適當</label>
-          <label><input type="radio" name="q4" value="0"> 完全乾燥、沒有空氣</label>
-          <label><input type="radio" name="q4" value="0"> 溫度越高越好</label>
-        </fieldset>
-        <fieldset>
-          <legend>5. 果實對植物繁殖可能有什麼幫助？</legend>
-          <label><input type="radio" name="q5" value="0"> 阻止種子離開母株</label>
-          <label><input type="radio" name="q5" value="1"> 保護種子並幫助散播</label>
-          <label><input type="radio" name="q5" value="0"> 讓花粉直接變成葉子</label>
-        </fieldset>
-        <button class="button primary" type="submit">送出評量</button>
       </form>
-    </section>
-
-    <section id="report" class="section report">
-      <div class="section-head">
-        <p class="eyebrow">學習報告</p>
-        <h2>你的即時評鑑結果</h2>
-      </div>
-      <div class="score-card" id="score-card" aria-live="polite">
-        <strong>目前總分 0 / 100</strong>
-        <p>完成上方任務和評量後，這裡會顯示分數、等級和下一步學習建議。</p>
-      </div>
     </section>
   </main>
 
-  <footer>
-    <p>生命的誕生互動學習網頁。適合課後複習、概念整理與形成性評量。</p>
-  </footer>
+  <template id="message-template">
+    <article class="message">
+      <div class="bubble">
+        <p class="message-text"></p>
+        <time class="message-time"></time>
+      </div>
+    </article>
+  </template>
 
   <script src="script.js"></script>
 </body>
