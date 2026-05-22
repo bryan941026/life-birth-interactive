@@ -1,226 +1,247 @@
-const LOGIN_URL = "http://127.0.0.1:8000/?loginRequired=1";
-const ENTRY_STORAGE_KEY = "lifeBirthEntry";
+const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbzR3ANqzITQnPHRgpB1jkIROL7ELkG8E7qDnIqK8jMfH9AVFNdORQU8p7rINpTT0dNR/exec";
+const MODEL = "gpt-5.4-mini";
+const BOT_NAME = "燈";
+const STORAGE_KEY = "deng-chat-history";
 
-function requireLoginEntry() {
-  const params = new URLSearchParams(window.location.search);
-  const fromLogin = params.get("fromLogin") === "1";
-  const student = params.get("student") || "";
-  const entryToken = params.get("entryToken") || "";
-  const savedEntry = sessionStorage.getItem(ENTRY_STORAGE_KEY);
+const form = document.getElementById("chat-form");
+const input = document.getElementById("message-input");
+const messagesEl = document.getElementById("messages");
+const sendButton = document.getElementById("send-button");
+const voiceButton = document.getElementById("voice-button");
+const template = document.getElementById("message-template");
 
-  if (fromLogin && /^[^\s@]+@gmail\.com$/i.test(student) && entryToken.length >= 32) {
-    sessionStorage.setItem(ENTRY_STORAGE_KEY, JSON.stringify({
-      student,
-      entryToken,
-      enteredAt: Date.now()
-    }));
-    window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognition = null;
+let isListening = false;
+let messages = loadMessages();
+
+const systemProfile = [
+  "你是聊天機器人「燈」。",
+  "你個性溫柔、安靜、很會安慰人。",
+  "你知道很多事情，是學科知識的專家。",
+  "你也是樂團主唱，喜歡企鵝，興趣是收集石頭。",
+  "請用繁體中文回覆，語氣正式、乾淨、溫暖。",
+  "不要使用 Markdown 格式，不要使用條列符號包裝情緒陪伴，除非使用者明確要求整理重點。",
+  "當使用者需要知識解釋時，請清楚、準確、循序回答；當使用者情緒低落時，先安慰，再陪他整理下一步。"
+].join("\n");
+
+function pad(value) {
+  return String(value).padStart(2, "0");
+}
+
+function formatTimestamp(dateInput = new Date()) {
+  const date = new Date(dateInput);
+  return `${date.getFullYear()}/${pad(date.getMonth() + 1)}/${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function loadMessages() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    return Array.isArray(saved) ? saved : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveMessages() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(messages.slice(-80)));
+}
+
+function scrollToLatest() {
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function addMessage(role, text, createdAt = new Date().toISOString(), options = {}) {
+  const node = template.content.firstElementChild.cloneNode(true);
+  node.classList.add(role);
+  if (options.pending) node.classList.add("pending");
+  node.querySelector(".message-text").textContent = text;
+  node.querySelector(".message-time").textContent = formatTimestamp(createdAt);
+  node.querySelector(".message-time").dateTime = createdAt;
+  messagesEl.appendChild(node);
+  scrollToLatest();
+  return node;
+}
+
+function renderMessages() {
+  messagesEl.textContent = "";
+  if (!messages.length) {
+    const now = new Date().toISOString();
+    addMessage("bot", "晚上好，我是燈。你可以慢慢說，我會在這裡陪你，也可以和你一起整理學習、生活或心裡的事情。", now);
+    messages.push({
+      role: "assistant",
+      text: "晚上好，我是燈。你可以慢慢說，我會在這裡陪你，也可以和你一起整理學習、生活或心裡的事情。",
+      createdAt: now
+    });
+    saveMessages();
     return;
   }
 
-  if (savedEntry) {
-    try {
-      const entry = JSON.parse(savedEntry);
-      const stillFresh = Date.now() - Number(entry.enteredAt || 0) < 6 * 60 * 60 * 1000;
-      if (entry.student && entry.entryToken && stillFresh) return;
-    } catch {
-      sessionStorage.removeItem(ENTRY_STORAGE_KEY);
-    }
+  for (const message of messages) {
+    addMessage(message.role === "user" ? "user" : "bot", message.text, message.createdAt);
   }
-
-  window.location.replace(LOGIN_URL);
 }
 
-requireLoginEntry();
-
-const state = {
-  matchScore: 0,
-  cycleScore: 0,
-  simScore: 0,
-  quizScore: 0,
-  quizSubmitted: false
-};
-
-const labels = {
-  pollen: "花粉",
-  stamen: "雄蕊",
-  pistil: "雌蕊",
-  ovule: "胚珠"
-};
-
-let selectedTerm = "";
-
-document.querySelectorAll(".tab").forEach((tab) => {
-  tab.addEventListener("click", () => {
-    document.querySelectorAll(".tab").forEach((item) => {
-      item.classList.remove("active");
-      item.setAttribute("aria-selected", "false");
-    });
-    document.querySelectorAll(".panel").forEach((panel) => panel.classList.remove("active"));
-
-    tab.classList.add("active");
-    tab.setAttribute("aria-selected", "true");
-    document.getElementById(tab.dataset.panel).classList.add("active");
-  });
-});
-
-document.querySelectorAll(".term-bank button").forEach((button) => {
-  button.addEventListener("click", () => {
-    selectedTerm = button.dataset.term;
-    document.querySelectorAll(".term-bank button").forEach((item) => item.classList.remove("selected"));
-    button.classList.add("selected");
-  });
-});
-
-document.querySelectorAll(".target-card").forEach((card) => {
-  card.addEventListener("click", () => {
-    if (!selectedTerm) {
-      document.getElementById("match-feedback").textContent = "先選一個名詞，再點選要配對的功能卡片。";
-      return;
-    }
-
-    card.dataset.given = selectedTerm;
-    card.querySelector("span").textContent = labels[selectedTerm];
-    card.classList.remove("correct", "wrong");
-  });
-});
-
-document.getElementById("check-match").addEventListener("click", () => {
-  let correct = 0;
-  document.querySelectorAll(".target-card").forEach((card) => {
-    card.classList.remove("correct", "wrong");
-    if (card.dataset.given === card.dataset.answer) {
-      correct += 1;
-      card.classList.add("correct");
-    } else {
-      card.classList.add("wrong");
-    }
-  });
-
-  state.matchScore = correct * 5;
-  document.getElementById("match-feedback").textContent = correct === 4
-    ? "配對全對。你已經能把花的構造和功能連起來。"
-    : `目前答對 ${correct}/4。提醒：雄蕊產生花粉，雌蕊接受花粉，胚珠受精後形成種子。`;
-  updateScoreCard();
-});
-
-document.getElementById("reset-match").addEventListener("click", () => {
-  selectedTerm = "";
-  state.matchScore = 0;
-  document.querySelectorAll(".term-bank button").forEach((button) => button.classList.remove("selected"));
-  document.querySelectorAll(".target-card").forEach((card) => {
-    delete card.dataset.given;
-    card.classList.remove("correct", "wrong");
-    card.querySelector("span").textContent = "尚未作答";
-  });
-  document.getElementById("match-feedback").textContent = "";
-  updateScoreCard();
-});
-
-const sequenceBank = document.querySelector(".sequence-bank");
-const sequenceLine = document.getElementById("sequence-line");
-const originalSequence = [...sequenceBank.querySelectorAll("button")];
-
-originalSequence.forEach((button) => {
-  button.addEventListener("click", () => {
-    sequenceLine.appendChild(button);
-  });
-});
-
-document.getElementById("reset-cycle").addEventListener("click", () => {
-  originalSequence.forEach((button) => sequenceBank.appendChild(button));
-  state.cycleScore = 0;
-  document.getElementById("cycle-feedback").textContent = "";
-  updateScoreCard();
-});
-
-document.getElementById("check-cycle").addEventListener("click", () => {
-  const chosen = [...sequenceLine.querySelectorAll("button")].map((button) => Number(button.dataset.step));
-  const complete = chosen.length === 5;
-  const correct = complete && chosen.every((step, index) => step === index + 1);
-
-  state.cycleScore = correct ? 20 : 0;
-  document.getElementById("cycle-feedback").textContent = correct
-    ? "順序正確。開花、授粉、受精、種子散播、萌芽，這就是新生命形成的主線。"
-    : complete
-      ? "順序還需要調整。先有花的構造，再授粉與受精，最後才是種子散播和萌芽。"
-      : "請先排完五張流程卡片。";
-  updateScoreCard();
-});
-
-["water", "air", "temperature"].forEach((id) => {
-  document.getElementById(id).addEventListener("input", updateSimulation);
-});
-
-function updateSimulation() {
-  const water = Number(document.getElementById("water").value);
-  const air = Number(document.getElementById("air").value);
-  const temperature = Number(document.getElementById("temperature").value);
-  const waterFit = 100 - Math.abs(water - 62) * 1.12;
-  const airFit = air;
-  const tempFit = 100 - Math.abs(temperature - 58) * 1.18;
-  const success = Math.max(0, Math.min(100, Math.round(waterFit * .34 + airFit * .3 + tempFit * .36)));
-
-  document.getElementById("meter-fill").style.width = `${success}%`;
-  document.getElementById("sprout").style.setProperty("--sprout-height", `${32 + success * .9}px`);
-  document.getElementById("sprout").style.setProperty("--leaf-scale", `${0.45 + success / 130}`);
-
-  let message = `成功率 ${success}%：`;
-  if (success >= 82) {
-    message += "條件很適合，多數種子有機會順利萌芽。";
-    state.simScore = 20;
-  } else if (success >= 60) {
-    message += "條件尚可，但可再微調水分或溫度。";
-    state.simScore = 14;
-  } else {
-    message += "萌芽條件不足，請確認水分、空氣與溫度是否合適。";
-    state.simScore = 8;
-  }
-
-  document.getElementById("sim-result").textContent = message;
-  updateScoreCard();
+function autosizeInput() {
+  input.style.height = "auto";
+  const nextHeight = Math.min(input.scrollHeight, 150);
+  input.style.height = `${nextHeight}px`;
+  input.style.overflowY = input.scrollHeight > 150 ? "auto" : "hidden";
 }
 
-document.getElementById("quiz").addEventListener("submit", (event) => {
+function setBusy(isBusy) {
+  sendButton.disabled = isBusy;
+  input.disabled = isBusy;
+}
+
+function normalizeReply(payload) {
+  if (!payload) return "";
+  if (typeof payload === "string") return payload;
+  return payload.reply || payload.message || payload.answer || payload.content || payload.text || "";
+}
+
+function buildPayload(userText, createdAt) {
+  return {
+    action: "chat",
+    model: MODEL,
+    botName: BOT_NAME,
+    message: userText,
+    createdAt,
+    timestamp: formatTimestamp(createdAt),
+    systemProfile,
+    history: messages.slice(-24).map((message) => ({
+      role: message.role,
+      content: message.text,
+      createdAt: message.createdAt
+    }))
+  };
+}
+
+async function requestReply(userText, createdAt) {
+  const response = await fetch(GAS_ENDPOINT, {
+    method: "POST",
+    headers: {
+      "Content-Type": "text/plain;charset=utf-8"
+    },
+    body: JSON.stringify(buildPayload(userText, createdAt))
+  });
+
+  const text = await response.text();
+  let payload = null;
+
+  try {
+    payload = JSON.parse(text);
+  } catch {
+    payload = { reply: text };
+  }
+
+  if (!response.ok || payload.ok === false || payload.error) {
+    throw new Error(payload.error || payload.message || "燈現在暫時無法回覆，請稍後再試一次。");
+  }
+
+  const reply = normalizeReply(payload).trim();
+  if (!reply) {
+    throw new Error("燈收到了訊息，但後台沒有回傳內容。");
+  }
+  return reply;
+}
+
+async function handleSubmit(event) {
   event.preventDefault();
-  let correct = 0;
+  const text = input.value.trim();
+  if (!text) return;
 
-  for (let index = 1; index <= 5; index += 1) {
-    const checked = document.querySelector(`input[name="q${index}"]:checked`);
-    correct += checked ? Number(checked.value) : 0;
+  const createdAt = new Date().toISOString();
+  messages.push({ role: "user", text, createdAt });
+  addMessage("user", text, createdAt);
+  saveMessages();
+
+  input.value = "";
+  autosizeInput();
+  setBusy(true);
+
+  const pendingNode = addMessage("bot", "燈正在安靜地想", new Date().toISOString(), { pending: true });
+
+  try {
+    const reply = await requestReply(text, createdAt);
+    const replyAt = new Date().toISOString();
+    pendingNode.remove();
+    addMessage("bot", reply, replyAt);
+    messages.push({ role: "assistant", text: reply, createdAt: replyAt });
+    saveMessages();
+  } catch (error) {
+    const replyAt = new Date().toISOString();
+    const fallback = error.message || "燈現在暫時無法回覆，請稍後再試一次。";
+    pendingNode.remove();
+    addMessage("bot", fallback, replyAt);
+    messages.push({ role: "assistant", text: fallback, createdAt: replyAt });
+    saveMessages();
+  } finally {
+    setBusy(false);
+    input.focus();
   }
-
-  state.quizScore = correct * 8;
-  state.quizSubmitted = true;
-  updateScoreCard();
-  document.getElementById("report").scrollIntoView({ behavior: "smooth", block: "start" });
-});
-
-function updateScoreCard() {
-  const total = state.matchScore + state.cycleScore + state.simScore + state.quizScore;
-  let level = "暖身中";
-  let advice = "先完成任務，再用評量確認自己是否理解授粉、受精、種子和萌芽。";
-
-  if (total >= 85) {
-    level = "概念熟練";
-    advice = "你已能清楚串起新生命形成的過程。下一步可以比較有性生殖與無性生殖的差異。";
-  } else if (total >= 65) {
-    level = "穩定理解";
-    advice = "基礎概念不錯。建議再回到流程排序，確認授粉和受精的先後與意義。";
-  } else if (total > 0) {
-    level = "需要整理";
-    advice = "先把花的構造與功能配對記熟，再練習從開花到萌芽的完整順序。";
-  }
-
-  const quizLine = state.quizSubmitted
-    ? `<p>評量得分：${state.quizScore}/40。互動任務得分：${state.matchScore + state.cycleScore + state.simScore}/60。</p>`
-    : "<p>評量尚未送出。互動任務最高 60 分，評量最高 40 分。</p>";
-
-  document.getElementById("score-card").innerHTML = `
-    <strong>目前總分 ${total} / 100，${level}</strong>
-    ${quizLine}
-    <p>${advice}</p>
-  `;
 }
 
-updateSimulation();
+function setupVoiceInput() {
+  if (!SpeechRecognition) {
+    voiceButton.disabled = true;
+    voiceButton.title = "此瀏覽器不支援語音輸入";
+    return;
+  }
+
+  recognition = new SpeechRecognition();
+  recognition.lang = "zh-TW";
+  recognition.interimResults = true;
+  recognition.continuous = false;
+
+  recognition.addEventListener("start", () => {
+    isListening = true;
+    voiceButton.classList.add("listening");
+    voiceButton.setAttribute("aria-label", "停止語音輸入");
+    voiceButton.title = "停止語音輸入";
+  });
+
+  recognition.addEventListener("end", () => {
+    isListening = false;
+    voiceButton.classList.remove("listening");
+    voiceButton.setAttribute("aria-label", "語音輸入");
+    voiceButton.title = "語音輸入";
+  });
+
+  recognition.addEventListener("result", (event) => {
+    let transcript = "";
+    for (let index = event.resultIndex; index < event.results.length; index += 1) {
+      transcript += event.results[index][0].transcript;
+    }
+    input.value = transcript.trim();
+    autosizeInput();
+  });
+
+  recognition.addEventListener("error", () => {
+    isListening = false;
+    voiceButton.classList.remove("listening");
+  });
+
+  voiceButton.addEventListener("click", () => {
+    if (isListening) {
+      recognition.stop();
+    } else {
+      recognition.start();
+    }
+  });
+}
+
+form.addEventListener("submit", handleSubmit);
+
+input.addEventListener("input", autosizeInput);
+
+input.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    form.requestSubmit();
+  }
+});
+
+renderMessages();
+autosizeInput();
+setupVoiceInput();
