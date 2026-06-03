@@ -1,4 +1,4 @@
-const GAS_ENDPOINT="https://script.google.com/macros/s/AKfycbzR3ANqzITQnPHRgpB1jkIROL7ELkG8E7qDnIqK8jMfH9AVFNdORQU8p7rINpTT0dNR/exec";
+const GAS_ENDPOINT="https://script.google.com/macros/s/AKfycbzk2G9ybaRWQBC61fKBYMc_ln6oQWFTIm1IFjnmxcMLMbJnpi6yl_pg_Uw30_OAMv9b/exec";
 const MODEL="gpt-5.4-mini";
 const BOT_NAME="燈";
 const STORAGE_KEY="deng-chat-history";
